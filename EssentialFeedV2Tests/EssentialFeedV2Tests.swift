@@ -38,18 +38,32 @@ class RemoteFeedLoaderTest: XCTestCase {
         let (sut, client) = makeSUT()
         // when
         // we are using method injection here and each has there pros and cons
-        sut.load(from: URL(string: "https://amazon.com")!)
+        sut.load()
         
         // assert
         
         XCTAssertNotNil(client.requestedURL)
     }
     
+    // we need to have clear seperation
+    
+    func test_load_requestDataTwiceFromURL() {
+        // given
+        
+        let(sut, client) = makeSUT()
+        // when we execute the load method twice
+        // expect to see a count that reflect the total number of times we we executed
+        sut.load()
+        sut.load()
+        
+        XCTAssertEqual(client.requestCount, 2)
+    }
+    
     // we can use a helper function because its a set of instructions to write more clean code and create more reusable code
-    private func makeSUT()->(RemoteFeedLoader, HTTPClientSpy) {
+    private func makeSUT(url: URL = URL(string: "https://amazon.com")!)->(RemoteFeedLoader, HTTPClientSpy) {
         // the system under test is the higher implementation
         let client: HTTPClientSpy = HTTPClientSpy()
-        let sut: RemoteFeedLoader = RemoteFeedLoader(client: client)
+        let sut: RemoteFeedLoader = RemoteFeedLoader(client: client, url: url)
         
         // now remmeber we have to have the same instances right thats the beautiful things about classes and objects
         return (sut, client)
@@ -76,9 +90,13 @@ class RemoteFeedLoaderTest: XCTestCase {
 // but to avoid inheritance chainning which can have effects on
 // so lets incorporate a contract that says you must implement this feature its very lightweight
 final class HTTPClientSpy: HTTPClient {
+    // at right we were testing to see if the
     var requestedURL: URL?
+    var requestCount: Int = 0
+
    func get(from url: URL) {
-        requestedURL = url
+       requestedURL = url
+       requestCount += 1
     }
 }
 
