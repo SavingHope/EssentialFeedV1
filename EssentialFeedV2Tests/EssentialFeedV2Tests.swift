@@ -17,8 +17,11 @@ class RemoteFeedLoaderTest: XCTestCase {
     func test_init_doesNotRequestDataFromURL() {
         // we want to see if the changes we are doing actually have an impact
         // we will use the unit test case to define how to creat the interface it should be failing
-        // given 
-        let client: HTTPClient = HTTPClient()
+        // given
+        // now if we want to make singletons testable we can create a mutable instance
+        
+        // remember a client who is requesting a reaction from a host
+        let client: HTTPClient = HTTPClientSpy.shared
         let _: RemoteFeedLoader = RemoteFeedLoader()
         // when
         
@@ -30,7 +33,7 @@ class RemoteFeedLoaderTest: XCTestCase {
     
     func test_load_requestDataFromURL() {
         // given
-        let client: HTTPClient = HTTPClient()
+        let client: HTTPClient = HTTPClientSpy	.shared
         let sut: RemoteFeedLoader = RemoteFeedLoader()
         // when
         // we are using method injection here and each has there pros and cons
@@ -39,12 +42,8 @@ class RemoteFeedLoaderTest: XCTestCase {
         // assert
         
         XCTAssertNotNil(client.requestedURL)
-        
-        
-        
     }
 }
-
 // lets test out the Singleton foor this approach
 // lets remember to create meaningful Names
 // what is the responsibility of this lower level class its to grab data which could considered a HTTPClient <--- remember this will always be a noun
@@ -52,8 +51,14 @@ class RemoteFeedLoaderTest: XCTestCase {
 
 // remember this is the D in dependency injection
 // where we want to have an implementation object and we interface that way our code doesn't break in the instance we don't create a changes
-class HTTPClient {
-    static let shared: HTTPClient = HTTPClient()
+// well we don't want to use our main system to share because this can conflict with productioon testing data
+// we shouldn't mix our production system with testing system
+// well we know every time that our will need a get operation to fetch data
+// we only want one instance of this object
+ class HTTPClient {
+    // we don't want to have an hard indepdence
+     static var shared = HTTPClient()
+     private init() {}
     // we also want to check to see if its grabbing the URL
     // there may or may not be a url in this instance
     var requestedURL: URL?
@@ -62,7 +67,16 @@ class HTTPClient {
     }
 }
 
+// The D in SOLID Principles states we should have a higher module and lower level module one for the implementation
+// we want to implement the get fucntion to fetch data for all of clients that are fetchinh
+// we should have multiple clients or maybe just one client that does one thing
 
+class HTTPClientSpy: HTTPClient {
+
+    override func get(from url: URL) {
+        requestedURL = url
+    }
+}
 
 class RemoteFeedLoader {
     // the responsibility of this function will be to
