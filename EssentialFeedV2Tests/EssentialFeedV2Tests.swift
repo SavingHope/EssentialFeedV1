@@ -4,33 +4,69 @@
 //
 //  Created by Jaavion Davis on 3/28/24.
 //
-
 import XCTest
-@testable import EssentialFeedV2
-
-final class EssentialFeedV2Tests: XCTestCase {
-
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+import Foundation
+// we are going to test the system
+// which could considered the controller
+// also could be known as the Higher Level Abstraction
+// first we want to test the implementation of the
+// first things is when I click load I want to know that is grabbing data from the URL that I am pulling.
+class RemoteFeedLoaderTest: XCTestCase {
+    // now
+    // we want to check and see if the client initalizing isn't automatically calling the test cases
+    func test_init_doesNotRequestDataFromURL() {
+        // we want to see if the changes we are doing actually have an impact
+        // we will use the unit test case to define how to creat the interface it should be failing
+        // given 
+        let client: HTTPClient = HTTPClient()
+        let _: RemoteFeedLoader = RemoteFeedLoader()
+        // when
+        
+        // expect
+        XCTAssertNil(client.requestedURL)
+        
     }
-
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+        // now we want to check and see if we are getting data from the requested URL
+    
+    func test_load_requestDataFromURL() {
+        // given
+        let client: HTTPClient = HTTPClient()
+        let sut: RemoteFeedLoader = RemoteFeedLoader()
+        // when
+        // we are using method injection here and each has there pros and cons
+        sut.load(from: URL(string: "https://amazon.com")!)
+        
+        // assert
+        
+        XCTAssertNotNil(client.requestedURL)
+        
+        
+        
     }
+}
 
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // Any test you write for XCTest can be annotated as throws and async.
-        // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
-        // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
+// lets test out the Singleton foor this approach
+// lets remember to create meaningful Names
+// what is the responsibility of this lower level class its to grab data which could considered a HTTPClient <--- remember this will always be a noun
+
+
+// remember this is the D in dependency injection
+// where we want to have an implementation object and we interface that way our code doesn't break in the instance we don't create a changes
+class HTTPClient {
+    static let shared: HTTPClient = HTTPClient()
+    // we also want to check to see if its grabbing the URL
+    // there may or may not be a url in this instance
+    var requestedURL: URL?
+    func get(from url: URL) {
+        requestedURL = url
     }
+}
 
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
-        }
+
+
+class RemoteFeedLoader {
+    // the responsibility of this function will be to
+    func load(from url: URL) {
+        HTTPClient.shared.get(from: url)
     }
-
 }
