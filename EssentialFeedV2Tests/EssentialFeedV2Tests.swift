@@ -21,8 +21,8 @@ class RemoteFeedLoaderTest: XCTestCase {
         // now if we want to make singletons testable we can create a mutable instance
         
         // remember a client who is requesting a reaction from a host
-        let client: HTTPClient = HTTPClientSpy.shared
-        let _: RemoteFeedLoader = RemoteFeedLoader()
+        let client = HTTPClientSpy()
+        let _: RemoteFeedLoader = RemoteFeedLoader(client: client)
         // when
         
         // expect
@@ -33,8 +33,8 @@ class RemoteFeedLoaderTest: XCTestCase {
     
     func test_load_requestDataFromURL() {
         // given
-        let client: HTTPClient = HTTPClientSpy	.shared
-        let sut: RemoteFeedLoader = RemoteFeedLoader()
+        let client = HTTPClientSpy()
+        let sut: RemoteFeedLoader = RemoteFeedLoader(client: client)
         // when
         // we are using method injection here and each has there pros and cons
         sut.load(from: URL(string: "https://amazon.com")!)
@@ -55,32 +55,34 @@ class RemoteFeedLoaderTest: XCTestCase {
 // we shouldn't mix our production system with testing system
 // well we know every time that our will need a get operation to fetch data
 // we only want one instance of this object
- class HTTPClient {
-    // we don't want to have an hard indepdence
-     static var shared = HTTPClient()
-     private init() {}
-    // we also want to check to see if its grabbing the URL
-    // there may or may not be a url in this instance
-    var requestedURL: URL?
-    func get(from url: URL) {
-        requestedURL = url
-    }
-}
+ 
 
 // The D in SOLID Principles states we should have a higher module and lower level module one for the implementation
 // we want to implement the get fucntion to fetch data for all of clients that are fetchinh
 // we should have multiple clients or maybe just one client that does one thing
 
+// but to avoid inheritance chainning which can have effects on
+// so lets incorporate a contract that says you must implement this feature its very lightweight
 class HTTPClientSpy: HTTPClient {
-
-    override func get(from url: URL) {
+    var requestedURL: URL?
+   func get(from url: URL) {
         requestedURL = url
     }
 }
 
+
+protocol HTTPClient {
+    func get(from url: URL)
+}
+
 class RemoteFeedLoader {
+    // we can use dependence injection for this that we can have a component and not have to break the entire code
+    let client: HTTPClient
+    init(client: HTTPClient) {
+        self.client = client
+    }
     // the responsibility of this function will be to
     func load(from url: URL) {
-        HTTPClient.shared.get(from: url)
+        client.get(from: url)
     }
 }
