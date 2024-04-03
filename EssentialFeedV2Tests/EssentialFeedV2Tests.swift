@@ -26,7 +26,37 @@ class RemoteFeedLoaderTest: XCTestCase {
         // when
         
         // expect
-        XCTAssertNil(client.requestedURL)
+        XCTAssertTrue(client.requestMessages.isEmpty)
+        
+    }
+    
+    func test_load_requestDeliversErrorOnClient() {
+        // given
+        // we want to assign the error here
+        // we want to check to see if this will return us an error we can stub the behavior
+        // remember we are checking to see whats inside of this state
+        var capturedError: RemoteFeedLoader.Error?
+        let (sut, client) =  makeSUT()
+        // here we are stubbing the value when we should observing the value
+        client.error = NSError(domain: "Test", code: 0)
+        
+        
+        // the system under test
+        // remember we are seeing how the controller is interacting so we need to make sure we are comparing to see the state
+        
+        // when we we load
+        // we want to test for  error, we should expect to get an error
+        // we need to see  how all of these objects will begin to collaborate
+        // remember this is a function and the in so its describing to us because its anonymous function that its has an argument
+        
+        sut.load { error in 
+            capturedError = error
+            
+        }
+    
+        //expect an err
+        
+        XCTAssertEqual(capturedError, .connectivity)
         
     }
         // now we want to check and see if we are getting data from the requested URL
@@ -35,14 +65,16 @@ class RemoteFeedLoaderTest: XCTestCase {
         // we can see theres a bunch of code repeating here
         // how about what we make a factory pattern
         // given
-        let (sut, client) = makeSUT()
+        let url: URL = URL(string: "https://amazon.com")!
+        let requestedtURLs = [url]
+        let (sut, client) = makeSUT(url: url)
         // when
         // we are using method injection here and each has there pros and cons
         sut.load()
         
         // assert
         
-        XCTAssertNotNil(client.requestedURL)
+        XCTAssertEqual(client.requestMessages, requestedtURLs)
     }
     
     // we need to have clear seperation
@@ -50,13 +82,16 @@ class RemoteFeedLoaderTest: XCTestCase {
     func test_load_requestDataTwiceFromURL() {
         // given
         
+        let `url`: URL = URL(string: "https://amazon.com")!
         let(sut, client) = makeSUT()
         // when we execute the load method twice
         // expect to see a count that reflect the total number of times we we executed
+        // we want to see how these objects are all collaborating with each other
         sut.load()
         sut.load()
+        // but we can refactor this code, we want to test the accuracy, it only checks to see if the we have the last count
         
-        XCTAssertEqual(client.requestCount, 2)
+        XCTAssertEqual(client.requestMessages, [url, url])
     }
     
     // we can use a helper function because its a set of instructions to write more clean code and create more reusable code
@@ -90,14 +125,20 @@ class RemoteFeedLoaderTest: XCTestCase {
 // but to avoid inheritance chainning which can have effects on
 // so lets incorporate a contract that says you must implement this feature its very lightweight
 final class HTTPClientSpy: HTTPClient {
-    // at right we were testing to see if the
-    var requestedURL: URL?
-    var requestCount: Int = 0
+    var error: Error?
 
-   func get(from url: URL) {
-       requestedURL = url
-       requestCount += 1
+    func get(from url: URL, handler: @escaping (Error) -> Void) {
+        // we are injecting with behavior
+        
+        if let error = error {
+            handler(error)
+        }
+        // this  logic does not need to be included
+        requestMessages.append(url)
     }
+    
+    // at right we were testing to see if the
+    var requestMessages: [URL] = [URL]()
 }
 
 

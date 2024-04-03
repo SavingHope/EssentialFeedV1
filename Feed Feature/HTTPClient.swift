@@ -7,6 +7,7 @@
 
 import Foundation
 
+// this need to adhere because this the contract
 public protocol HTTPClient {
-    func get(from url: URL)
+    func get(from url: URL, handler: @escaping (Error)-> Void)
 }
